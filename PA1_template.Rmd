@@ -1,25 +1,189 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
+title: "PA1_template"
+author: "Harry Werder Coursera"
+date: "Tuesday, February 10, 2015"
+output: html_document
 ---
+# My Assignement 1 for "Reproducible Research"
+
+# Part 1: What is mean total number of steps taken per day? (Without NA)
+## 1.Step: 
+Set the working directory which is on the Desktop and load the raw data
+```{r}
+setwd("C:/Users/Harry/Desktop/5- Reproducability Research/Assignment 1")
+rawdata <- read.csv("activity.csv")
+class_steps <- class(rawdata$steps)
+class_date <- class(rawdata$date)
+class_interval <-class(rawdata$interval)
+numberrows <- nrow(rawdata)
+```
+
+The data has three columns and the following data types:  
+steps: `r class_steps`  
+date: `r class_date`  
+interval: `r class_interval`  
+and `r numberrows` measurements  
+
+## 2. Step: Tidy the data up
+We build now our tidy data set:
+- date is transformed into a date format
+- interval into a factor
+- all steps with NA value are removed
+```{r, echo=TRUE}
+tidydata <- rawdata
+tidydata$date <- as.Date(as.character(tidydata$date))
+tidydata$interval<-as.factor(tidydata$interval)
+tidydata <- tidydata[complete.cases(tidydata),]
+nowrows <- nrow(tidydata)
+```
+Now our data is tidy and has `r nowrows` of measurements.
+
+## 3. Step: What is the average daily activity pattern? 
+### Analyse the data  
+We will use the dplyr-package for analysis and ggplot for graphics
+
+### 3.1. Calculate the number of steps for each day  
+```{r, echo=TRUE, results="hide"}
+library(dplyr)
+library(ggplot2)
+```
+``` {r echo=TRUE}
+result <- summarise(group_by(tidydata,date),sum(steps))
+colnames(result) <- c("date","sum_steps")
+```
+Lets explore the result:
+```{r, message=FALSE}
+library(ggplot2)
+qplot(data= result, date, sum_steps, main="Number of steps taken each day")
+```
+
+### 3.2. Lets have a look at the result with a histogram  
+The historgram shows the distribution:
+``` {r}
+qplot(data=result, sum_steps, main="Histogram of steps taken each day")
+
+```
+
+### 3.3. Lets have a lock at the mean of steps and median of steps for each day
+```{r}}
+result2 <- summarise(result,mean(sum_steps))
+result3 <- summarise(result,median(sum_steps))
+Meansteps <- as.character(result2)
+Mediansteps <- as.character(result3)
+```
+  
+This is the mean of steps for each day:  `r Meansteps `  steps.  
+This is the median of steps for each day:   `r Mediansteps ` steps.
+
+## 4. What is the average daily activity pattern?
+
+### 4.1. Eplore the activity  
+On the x-axis: intervals of a day  
+On the y-axis: mean of interval across all days  
+```{r}
+result4 <- summarise(group_by(tidydata,interval),mean(steps))
+colnames(result4) <- c("interval","average_steps")
+qplot(data=result4,interval,average_steps)
+Max_average <- max(result4$average_steps)
+Max_interval <- subset(result4, Max_average==average_steps)
+```
+The maximum average value is `r Max_average ` at interval `r Max_interval$interval `.
+
+# Part 2: Imputing missing values
+We start with the raw data again and make them clean.  
+## 1.Step: Cleaning and counting NA rows
+``` {r}
+tidydata2 <- rawdata
+tidydata2$date <- as.Date(as.character(tidydata2$date))
+tidydata2$interval<-as.factor(tidydata2$interval)
+nowrows2 <- nrow(tidydata2)
+NAinData <- nowrows2 - nowrows
+inpercent <- round(NAinData/nowrows2*100,0)
+```
+The data set has `r NAinData` rows with NA data: this is `r inpercent`% of all rows.
+
+## 2. Step: Replace strategy  
+Let us use a strategy to replace the NA values with the mean value for the interval across all days.  
+```{r}
+result5 <- summarise(group_by(tidydata2,interval),mean(steps, na.rm=TRUE))
+colnames(result5) <- c("interval","average_steps")
+#select the NA data
+bad<- is.na(tidydata2$steps)
+allNA<-subset(tidydata2, bad)
+#replace the NA with the mean for this interval
+for (i in 1:nrow(allNA)){
+    b <- allNA[i,3]
+    a <- subset(result5,b==result5$interval)
+    newsteps <-round(a$average_steps,0)
+    allNA[i,1] <- newsteps
+}
+#new data with NA relaced by mean: take the tidydata with NA and add our allNA with the means
+tidydata3 <- rbind(tidydata,allNA)
+```
+## 3. Analyse the data with replaced NA by mean of interval
+
+### 3.1. Histrogram
+The historgram shows the distribution; number of steps by day
+``` {r}
+result6 <- summarise(group_by(tidydata3,date),sum(steps))
+colnames(result6) <- c("date","sum_steps")
+qplot(data=result6, sum_steps, main="Histogram of steps taken each day")
+```
+
+### 3.2. Lets have a lock at the mean of steps and median of steps for each day
+```{r}
+result21 <- summarise(result6,mean(sum_steps))
+result31 <- summarise(result6,median(sum_steps))
+Meansteps1 <- as.character(result21)
+Mediansteps1 <- as.character(result31)
+```
+  
+This is the mean of steps for each day:  `r Meansteps1 `  steps.  
+This is the median of steps for each day:   `r Mediansteps1 ` steps.
+
+# Compare result with "NA removed"" and with "NA replaced by mean of interval"
+##4.1 Mean-Median per day
+Let's build a table for comparision for mean and median:
+```{r}
+data.frame(Cases=c("NA removed", "NA replaced by mean"), Number_of_cases= c(nowrows,nowrows2), Mean_value= c(Meansteps,Meansteps1), Median_value= c(Mediansteps, Mediansteps1))
+
+```
+
+Conclusion: there is only a slight effect on relpacing NA values with the mean of the interval.
+
+#4.2. Total number of steps per day
+We take the data set without NA and calculate the total number of steps per day.
+We then take the data set with replaced NA by mean and calculate the total number of steps per day.
+```{r}
+stepsNAremoved <- summarise(group_by(tidydata,date),sum(steps))
+colnames(stepsNAremoved)<-c("dates","steps")
+stepsNAreplaced <- summarise(group_by(tidydata3,date), sum(steps))
+colnames(stepsNAreplaced)<-c("dates","steps_NA_corrected")
+result7<- merge(stepsNAremoved, stepsNAreplaced, by="dates",all=TRUE)
+result7$impact <- result7$steps_NA_corrected-result7$steps
+```
+
+The replacement of missing values (NA) by a mean values has given days without measurement now a value.  
+```{r}
+result7
+```
 
 
-## Loading and preprocessing the data
+# Part 3: Are there differences in activity patterns between weekdays and weekends?  
 
+We use for this analysis the data set with the replaced NA by the mean of the interval (of all days).
 
+My Question: is there a difference in weedays (Mo-Fr) to weekend (Saturday & Sunday)?
 
-## What is mean total number of steps taken per day?
+```{r}
+tidydata3$day <- weekdays(tidydata3$date,abbreviate = FALSE)
+# decide if weekday or weekend
+tidydata3$day["Samstag"==tidydata3$day]<-"weekend"
+tidydata3$day["Sonntag"==tidydata3$day]<-"weekend"
+tidydata3$day["weekend"!=tidydata3$day]<-"weekday"
+tidydata3$day <- as.factor(tidydata3$day)
+# create the summary for the plot
+result8<-summarise(group_by(tidydata3,day,interval),mean(steps))
+colnames(result8) <- c("day","interval","sum_steps")  #adjust the names of columns
 
-
-
-## What is the average daily activity pattern?
-
-
-
-## Imputing missing values
-
-
-
-## Are there differences in activity patterns between weekdays and weekends?
+qplot(data=result8,as.numeric(interval),sum_steps, col=day, geom="line")+facet_grid(day~.)+xlab("interval of the day")+ylab("average of steps per interval")+guides(col=FALSE)
