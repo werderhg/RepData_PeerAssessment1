@@ -7,7 +7,7 @@ output: html_document
 # My Assignement 1 for "Reproducible Research"
 
 # Part 1: What is mean total number of steps taken per day? (Without NA)
-## 1.Step: 
+## 1.Step: Reading the data
 Set the working directory which is on the Desktop and load the raw data
 ```{r}
 setwd("C:/Users/Harry/Desktop/5- Reproducability Research/Assignment 1")
@@ -72,8 +72,8 @@ Meansteps <- as.character(result2)
 Mediansteps <- as.character(result3)
 ```
   
-This is the mean of steps for each day:  `r Meansteps `  steps.  
-This is the median of steps for each day:   `r Mediansteps ` steps.
+This is the **mean** of steps for each day:  **`r Meansteps `  steps**.  
+This is the **median** of steps for each day:   **`r Mediansteps ` steps**.
 
 ## 4. What is the average daily activity pattern?
 
@@ -83,11 +83,12 @@ On the y-axis: mean of interval across all days
 ```{r}
 result4 <- summarise(group_by(tidydata,interval),mean(steps))
 colnames(result4) <- c("interval","average_steps")
-qplot(data=result4,interval,average_steps)
+qplot(data=result4,interval,average_steps, main="Time series plot of average steps taken")
 Max_average <- max(result4$average_steps)
 Max_interval <- subset(result4, Max_average==average_steps)
 ```
-The maximum average value is `r Max_average ` at interval `r Max_interval$interval `.
+The maximum average number of steps is `r Max_average `   
+at **interval `r Max_interval$interval `**.
 
 # Part 2: Imputing missing values
 We start with the raw data again and make them clean.  
@@ -103,7 +104,7 @@ inpercent <- round(NAinData/nowrows2*100,0)
 The data set has `r NAinData` rows with NA data: this is `r inpercent`% of all rows.
 
 ## 2. Step: Replace strategy  
-Let us use a strategy to replace the NA values with the mean value for the interval across all days.  
+Let us use a **strategy to replace the NA values** with the **mean value** for the interval across all days.  
 ```{r}
 result5 <- summarise(group_by(tidydata2,interval),mean(steps, na.rm=TRUE))
 colnames(result5) <- c("interval","average_steps")
@@ -127,7 +128,7 @@ The historgram shows the distribution; number of steps by day
 ``` {r}
 result6 <- summarise(group_by(tidydata3,date),sum(steps))
 colnames(result6) <- c("date","sum_steps")
-qplot(data=result6, sum_steps, main="Histogram of steps taken each day")
+qplot(data=result6, sum_steps, main="Histogram of total number of steps taken each day")
 ```
 
 ### 3.2. Lets have a lock at the mean of steps and median of steps for each day
@@ -186,4 +187,4 @@ tidydata3$day <- as.factor(tidydata3$day)
 result8<-summarise(group_by(tidydata3,day,interval),mean(steps))
 colnames(result8) <- c("day","interval","sum_steps")  #adjust the names of columns
 
-qplot(data=result8,as.numeric(interval),sum_steps, col=day, geom="line")+facet_grid(day~.)+xlab("interval of the day")+ylab("average of steps per interval")+guides(col=FALSE)
+qplot(data=result8,as.numeric(interval),sum_steps, col=day, geom="line", main= "Panel Plot")+facet_grid(day~.)+xlab("interval of the day")+ylab("average of steps per interval")+guides(col=FALSE)

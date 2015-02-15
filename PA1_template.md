@@ -7,7 +7,7 @@ output: html_document
 # My Assignement 1 for "Reproducible Research"
 
 # Part 1: What is mean total number of steps taken per day? (Without NA)
-## 1.Step: 
+## 1.Step: Reading the data
 Set the working directory which is on the Desktop and load the raw data
 
 ```r
@@ -48,6 +48,22 @@ We will use the dplyr-package for analysis and ggplot for graphics
 
 ```r
 library(dplyr)
+```
+
+```
+## 
+## Attaching package: 'dplyr'
+## 
+## The following object is masked from 'package:stats':
+## 
+##     filter
+## 
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
+```
+
+```r
 library(ggplot2)
 ```
 
@@ -86,8 +102,8 @@ Meansteps <- as.character(result2)
 Mediansteps <- as.character(result3)
 ```
   
-This is the mean of steps for each day:  10766.1886792453  steps.  
-This is the median of steps for each day:   10765 steps.
+This is the **mean** of steps for each day:  **10766.1886792453  steps**.  
+This is the **median** of steps for each day:   **10765 steps**.
 
 ## 4. What is the average daily activity pattern?
 
@@ -98,7 +114,7 @@ On the y-axis: mean of interval across all days
 ```r
 result4 <- summarise(group_by(tidydata,interval),mean(steps))
 colnames(result4) <- c("interval","average_steps")
-qplot(data=result4,interval,average_steps)
+qplot(data=result4,interval,average_steps, main="Time series plot of average steps taken")
 ```
 
 ![plot of chunk unnamed-chunk-7](figure/unnamed-chunk-7-1.png) 
@@ -107,7 +123,8 @@ qplot(data=result4,interval,average_steps)
 Max_average <- max(result4$average_steps)
 Max_interval <- subset(result4, Max_average==average_steps)
 ```
-The maximum average value is 206.1698113 at interval 835.
+The maximum average number of steps is 206.1698113   
+at **interval 835**.
 
 # Part 2: Imputing missing values
 We start with the raw data again and make them clean.  
@@ -124,7 +141,7 @@ inpercent <- round(NAinData/nowrows2*100,0)
 The data set has 2304 rows with NA data: this is 13% of all rows.
 
 ## 2. Step: Replace strategy  
-Let us use a strategy to replace the NA values with the mean value for the interval across all days.  
+Let us use a **strategy to replace the NA values** with the **mean value** for the interval across all days.  
 
 ```r
 result5 <- summarise(group_by(tidydata2,interval),mean(steps, na.rm=TRUE))
@@ -150,7 +167,7 @@ The historgram shows the distribution; number of steps by day
 ```r
 result6 <- summarise(group_by(tidydata3,date),sum(steps))
 colnames(result6) <- c("date","sum_steps")
-qplot(data=result6, sum_steps, main="Histogram of steps taken each day")
+qplot(data=result6, sum_steps, main="Histogram of total number of steps taken each day")
 ```
 
 ```
@@ -290,7 +307,7 @@ tidydata3$day <- as.factor(tidydata3$day)
 result8<-summarise(group_by(tidydata3,day,interval),mean(steps))
 colnames(result8) <- c("day","interval","sum_steps")  #adjust the names of columns
 
-qplot(data=result8,as.numeric(interval),sum_steps, col=day, geom="line")+facet_grid(day~.)+xlab("interval of the day")+ylab("average of steps per interval")+guides(col=FALSE)
+qplot(data=result8,as.numeric(interval),sum_steps, col=day, geom="line", main= "Panel Plot")+facet_grid(day~.)+xlab("interval of the day")+ylab("average of steps per interval")+guides(col=FALSE)
 ```
 
 ![plot of chunk unnamed-chunk-15](figure/unnamed-chunk-15-1.png) 
