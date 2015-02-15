@@ -2,7 +2,7 @@
 title: "PA1_template"
 author: "Harry Werder Coursera"
 date: "Tuesday, February 10, 2015"
-output: html_document
+output: md_document
 ---
 # My Assignement 1 for "Reproducible Research"
 
